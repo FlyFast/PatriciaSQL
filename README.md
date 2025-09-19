@@ -1,2 +1,2 @@
 # PatriciaSQL
-MariaDB Client
+A new fast and stable MariaDB Client.
