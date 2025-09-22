@@ -44,20 +44,20 @@ int prompt_credentials(char *userid, size_t userid_size,
            if (i > 0) {
                i--;
                password[i] = '\0';
-               mvaddch(4, 16 + i, ' '); // erase last '*'
-               move(4, 16 + i);
+               mvaddch(4, 18 + i, ' '); // erase last '*'
+               move(4, 18 + i);
            }
        } else {
            password[i++] = ch;
            password[i] = '\0';
-           mvaddch(4, 16 + i - 1, '*'); // display '*'
+           mvaddch(4, 18 + i - 1, '*'); // display '*'
        }
        refresh();
    }
    password[i] = '\0';
 
-   // Optional: confirm collection
-   mvprintw(6, 2, "Credentials received.");
+   // Confirm credentials received
+   mvprintw(10, 2, "Credentials received.");
    refresh();
 
    return 0;
@@ -69,7 +69,7 @@ int mariadb_conn(MYSQL *conn, char *userid, char* password)
          conn,                      // Connection
          "127.0.0.1",               // Host
          userid,                    // User
-         password,       // Pwd
+         password,                  // Pwd
          "bookstore",               // Database
          3306,                      // Port
          NULL,                      // Path to socket file
@@ -77,11 +77,23 @@ int mariadb_conn(MYSQL *conn, char *userid, char* password)
       ))
    {
       // Report the connection failure error and close the connection
-      fprintf(stderr, "Error connecting to the Server: %s\n", 
-               mysql_error(conn));
+      mvprintw(12, 2, "Error logging into MariaDB.");
+      mvprintw(13, 5, "%s", mysql_error(conn));
+      refresh();
+      // fprintf(stderr, "Error connecting to the Server: %s\n", 
+      //         mysql_error(conn));
       mysql_close(conn);
-      exit(1);
+      getch();
+      endwin();                        // End curses
+
+      return(-1);
    }
+
+   mvprintw(12, 2, "Successfully logged into MariaDB.");
+   refresh();
+
+   // TODO: Remove this before adding additional database code.
+   mysql_close(conn);
 
    return 0;
 }
@@ -93,14 +105,14 @@ int main()
 
    MYSQL *conn;
 
+   conn = mysql_init(NULL);         // Initialize the MariaDB connection
+
    initscr();                       // Start curses
    prompt_credentials(userid, sizeof(userid), pwd, sizeof(pwd));
    mariadb_conn(conn, userid, pwd);
    getch();
-   endwin();                        // End curses
 
-   printf("Collected User ID:  %s\n", userid);
-   printf("Collected Password: %s\n", pwd);
+   endwin();                        // End curses
 
    return 0;
 
