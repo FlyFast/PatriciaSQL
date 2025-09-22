@@ -1,7 +1,7 @@
 # Makefile for patriciasql (single-source C++ program)
 CXX := g++
 CXXFLAGS := -std=c++17 -O2 -Wall -Wextra
-LDFLAGS := -lncurses -lmenu
+LDFLAGS := -lncurses -lmenu -lpanel
 
 # Get MySQL CFLAGS and LIBS from mysql_config
 MYSQLCFLAGS = $(shell mariadb_config --cflags)

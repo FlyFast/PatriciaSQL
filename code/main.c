@@ -3,6 +3,7 @@
 #include <mysql.h>
 #include <menu.h>       // ncurses menu support
 #include <ncurses.h>    // Only required for character terminal version.
+#include <panel.h>      // Used to manage sub-windows in ncurses
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -113,6 +114,13 @@ int mariadb_conn(MYSQL *conn, char *userid, char* password)
    return 0;
 }
 
+/* Main program
+ *
+ * This will need to be refactored to break things into functions,
+ * isolate the ncurses code so it can be replaced with other UIs, etc.
+ *
+ */
+
 int main()
 {
    char userid[128];                // TODO: DEFINE the max value
@@ -129,12 +137,22 @@ int main()
    int i;                           // Iterator
    char *choices[] =                // Define the menu options
    {
-      "Option 1",
-      "Option 2",
-      "Option 3",
+      "File",
+      "Edit",
+      "Search",
+      "Query",
+      "Tools",
+      "Help",
       "Exit",
    };
    // End ncurses specific menu variables and defines *************************
+
+   // Start ncurses specific window variables
+   WINDOW *winQuery, *winResults;   // Pointers to the top and bottom windows
+   PANEL *panQuery, *panResults;    // Panels for the windows
+   int rows, cols;                  // Number of rows/columns in the terminal
+   PANEL *top = panQuery;           // Key track of panel with the focus
+   // End ncurses specific window variables
 
    MYSQL *conn;                     // Database connection variable
 
@@ -152,6 +170,29 @@ int main()
    clear();                         // Clear the screen
    refresh();                       // Redraw the cleared screen
    
+   // Create the two sub-windows
+   getmaxyx(stdscr, rows, cols);    // Get the terminal size
+
+   // Create the two windows stacked vertically (half screen each)
+   // allowing room for the menu at the top.
+   winQuery = newwin(rows / 2 + 1, cols, 1, 0);
+   winResults = newwin((rows / 2), cols, (rows / 2) + 1, 0);
+
+   // Create the panels to manage window stacking
+   panQuery = new_panel(winQuery);
+   panResults = new_panel(winResults);
+
+   // Draw borders and labels
+   box(winQuery, 0, 0);
+   mvwprintw(winQuery, 1, 2, "Query");
+
+   box(winResults, 0, 0);
+   mvwprintw(winResults, 1, 2, "Results");
+
+   // Show the panels
+   update_panels();
+   doupdate();
+
    // Create new menu items
    n_choices = ARRAY_SIZE(choices);
    items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
@@ -168,20 +209,32 @@ int main()
    set_menu_format(menu, 1, n_choices);
 
    // Post the menu at row 0
-   mvprintw(2, 0, "Use LEFT/RIGHT arrow keys, Enter to select");
+   // mvprintw(2, 0, "Use LEFT/RIGHT arrow keys, Enter to select");
    set_menu_mark(menu, "");  // no marker (default is "->")
    post_menu(menu);
    refresh();
 
    while ((c = getch()) != KEY_F(1)) 
    {
-      switch (c) 
+      switch (c) // TODO: Improve key handling for new complexity
       {
          case KEY_RIGHT:
             menu_driver(menu, REQ_RIGHT_ITEM);
             break;
          case KEY_LEFT:
             menu_driver(menu, REQ_LEFT_ITEM);
+            break;
+         case '\t': // Tab key - toggle which panel gets focus
+            if (top == panQuery)
+            {
+               top_panel(panResults);
+               top = panResults;
+            }
+            else
+            {
+               top_panel(panQuery);
+               top = panQuery;
+            }
             break;
          case 10: // Enter key
             {
@@ -198,6 +251,8 @@ int main()
                break;
             }
       }
+      update_panels();
+      doupdate();
       refresh();
    }
 
@@ -209,6 +264,12 @@ cleanup:
    
    free_item(items[i]);
    free(items);
+
+   // Cleanup the panels
+   del_panel(panQuery);
+   del_panel(panResults);
+   delwin(winQuery);
+   delwin(winResults);
     
    endwin(); // End ncurses
    return 0;
