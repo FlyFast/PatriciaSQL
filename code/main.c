@@ -1,7 +1,8 @@
 // This file is a place holder for the future code.
 
 #include <mysql.h>
-#include <ncurses.h>
+#include <menu.h>       // ncurses menu support
+#include <ncurses.h>    // Only required for character terminal version.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,6 +64,20 @@ int prompt_credentials(char *userid, size_t userid_size,
    return 0;
 }
 
+
+/* Connect to a MariaDB server with the provided credentials.
+ *
+ * Assumes the database connection has been initialized with mysql_init().
+ * TODO: Add host as a parameter
+ *       Add database as a parameter
+ *       Handle sockets (low priority)
+ * 
+ * Paramters:
+ *    conn is a pointer to the database connection created by mysql_init().
+ *    userid is a string pointer to the user's login name.
+ *    password is a string pointer to the user's password.
+ *
+ */    
 int mariadb_conn(MYSQL *conn, char *userid, char* password)
 {
    if (!mysql_real_connect(
@@ -100,20 +115,101 @@ int mariadb_conn(MYSQL *conn, char *userid, char* password)
 
 int main()
 {
-   char userid[128];
-   char pwd[128];
+   char userid[128];                // TODO: DEFINE the max value
+   char pwd[128];                   // TODO: DEFINE the max value
 
-   MYSQL *conn;
+   // Start ncurses specific menu variables and defines ***********************
+   // These should be moved to an ncurses specific file
+   ITEM **items;                    // Menu items
+   MENU *menu;                      // Menu pointer
+   #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+   #define CTRLD 4
+   int c;                           // Working space for one character
+   int n_choices;                   // Number of menu choices
+   int i;                           // Iterator
+   char *choices[] =                // Define the menu options
+   {
+      "Option 1",
+      "Option 2",
+      "Option 3",
+      "Exit",
+   };
+   // End ncurses specific menu variables and defines *************************
+
+   MYSQL *conn;                     // Database connection variable
 
    conn = mysql_init(NULL);         // Initialize the MariaDB connection
 
-   initscr();                       // Start curses
+   initscr();                       // Start ncurses
+   cbreak();                        // Disable line buffering
+   noecho();                        // TODO: ????
+   keypad(stdscr, TRUE);            // TODO: ????
+
+   // Prompt for login and connect to the database
    prompt_credentials(userid, sizeof(userid), pwd, sizeof(pwd));
    mariadb_conn(conn, userid, pwd);
-   getch();
+   getch();                         // Wait for user before ending.
+   clear();                         // Clear the screen
+   refresh();                       // Redraw the cleared screen
+   
+   // Create new menu items
+   n_choices = ARRAY_SIZE(choices);
+   items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
+   for (i = 0; i < n_choices; ++i)
+   {
+      items[i] = new_item(choices[i], ""); // label + description
+   };
+   items[n_choices] = (ITEM *)NULL;
 
-   endwin();                        // End curses
+   // Create menu
+   menu = new_menu((ITEM **)items);
 
+   // Display menu horizontally with 1 row and n_choices columns
+   set_menu_format(menu, 1, n_choices);
+
+   // Post the menu at row 0
+   mvprintw(2, 0, "Use LEFT/RIGHT arrow keys, Enter to select");
+   set_menu_mark(menu, "");  // no marker (default is "->")
+   post_menu(menu);
+   refresh();
+
+   while ((c = getch()) != KEY_F(1)) 
+   {
+      switch (c) 
+      {
+         case KEY_RIGHT:
+            menu_driver(menu, REQ_RIGHT_ITEM);
+            break;
+         case KEY_LEFT:
+            menu_driver(menu, REQ_LEFT_ITEM);
+            break;
+         case 10: // Enter key
+            {
+               ITEM *cur = current_item(menu);
+               const char *name = item_name(cur);
+
+               mvprintw(LINES - 4, 0, "You selected: %s   ", name);
+               refresh();
+
+               if (strcmp(name, "Exit") == 0) 
+               {
+                  goto cleanup; // TODO: remove the goto
+               };
+               break;
+            }
+      }
+      refresh();
+   }
+
+cleanup:
+   // Unpost and free all the memory
+   unpost_menu(menu);
+   free_menu(menu);
+   for (i = 0; i < n_choices; ++i)
+   
+   free_item(items[i]);
+   free(items);
+    
+   endwin(); // End ncurses
    return 0;
-
 }
