@@ -104,7 +104,9 @@ int mariadb_conn(MYSQL *conn, char *userid, char* password)
 
       return(-1);
    }
-
+   // TODO: Change the below message to say:
+   //       Logged into <hostname> on <bind_address>
+   //       Use SELECT @@hostname, @@bind_address;
    mvprintw(12, 2, "Successfully logged into MariaDB.");
    refresh();
 
@@ -184,10 +186,10 @@ int main()
 
    // Draw borders and labels
    box(winQuery, 0, 0);
-   mvwprintw(winQuery, 1, 2, "Query");
+   mvwprintw(winQuery, 0, 2, "Query");
 
    box(winResults, 0, 0);
-   mvwprintw(winResults, 1, 2, "Results");
+   mvwprintw(winResults, 0, 2, "Results");
 
    // Show the panels
    update_panels();
