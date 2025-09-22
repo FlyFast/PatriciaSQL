@@ -3,6 +3,10 @@ CXX := g++
 CXXFLAGS := -std=c++17 -O2 -Wall -Wextra
 LDFLAGS := -lncurses
 
+# Get MySQL CFLAGS and LIBS from mysql_config
+MYSQLCFLAGS = $(shell mysql_config --cflags)
+MYSQLLIBS = $(shell mysql_config --libs)
+
 SRC := main.cpp
 OBJ := $(SRC:.cpp=.o)
 TARGET := patriciasql
@@ -12,10 +16,10 @@ TARGET := patriciasql
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(MYSQLLIBS)
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(MYSQLCFLAGS) -c $< -o $@
 
 debug: CXXFLAGS += -g -O0
 debug: clean all
@@ -25,4 +29,3 @@ run: all
 
 clean:
 	rm -f $(OBJ) $(TARGET)
-
