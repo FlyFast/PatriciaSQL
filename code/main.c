@@ -178,7 +178,7 @@ int main()
    // Create the two windows stacked vertically (half screen each)
    // allowing room for the menu at the top.
    winQuery = newwin(rows / 2 + 1, cols, 1, 0);
-   winResults = newwin((rows / 2), cols, (rows / 2) + 1, 0);
+   winResults = newwin((rows / 2) - 1, cols, (rows / 2) + 1, 0);
 
    // Create the panels to manage window stacking
    panQuery = new_panel(winQuery);
