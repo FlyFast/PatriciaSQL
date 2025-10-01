@@ -37,7 +37,7 @@ int prompt_credentials(char *userid, size_t userid_size,
    noecho();
 
    // Prompt for password
-   mvprintw(4, 2, "Enter Password: ");
+   mvprintw(3, 2, "Enter Password: ");
    refresh();
 
    i = 0;
@@ -46,20 +46,20 @@ int prompt_credentials(char *userid, size_t userid_size,
            if (i > 0) {
                i--;
                password[i] = '\0';
-               mvaddch(4, 18 + i, ' '); // erase last '*'
-               move(4, 18 + i);
+               mvaddch(3, 18 + i, ' '); // erase last '*'
+               move(3, 18 + i);
            }
        } else {
            password[i++] = ch;
            password[i] = '\0';
-           mvaddch(4, 18 + i - 1, '*'); // display '*'
+           mvaddch(3, 18 + i - 1, '*'); // display '*'
        }
        refresh();
    }
    password[i] = '\0';
 
    // Confirm credentials received
-   mvprintw(10, 2, "Credentials received.");
+   mvprintw(5, 2, "Credentials received.");
    refresh();
 
    return 0;
