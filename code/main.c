@@ -8,13 +8,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define SERVER "127.0.0.1"
+
 // TODO: move this into a file with curses utility functions.
 //       the file will need to be unique to each target client.
 int prompt_credentials(char *userid, size_t userid_size,
                         char *password, size_t password_size);
 
 // TODO: move this into a file with mariadb utility functions
-int mariadb_conn(MYSQL *conn, char *userid, char *password);
+int mariadb_conn(MYSQL *conn, char *server, char *userid, char *password);
 
 /**
  * Prompt the user for userid and password using ncurses.
@@ -69,8 +71,7 @@ int prompt_credentials(char *userid, size_t userid_size,
 /* Connect to a MariaDB server with the provided credentials.
  *
  * Assumes the database connection has been initialized with mysql_init().
- * TODO: Add host as a parameter
- *       Add database as a parameter
+ * TODO: Add database as a parameter
  *       Handle sockets (low priority)
  * 
  * Paramters:
@@ -79,11 +80,11 @@ int prompt_credentials(char *userid, size_t userid_size,
  *    password is a string pointer to the user's password.
  *
  */    
-int mariadb_conn(MYSQL *conn, char *userid, char* password)
+int mariadb_conn(MYSQL *conn, char *server, char *userid, char* password)
 {
    if (!mysql_real_connect(
          conn,                      // Connection
-         "127.0.0.1",               // Host
+         server,                    // Host
          userid,                    // User
          password,                  // Pwd
          "bookstore",               // Database
@@ -167,7 +168,7 @@ int main()
 
    // Prompt for login and connect to the database
    prompt_credentials(userid, sizeof(userid), pwd, sizeof(pwd));
-   mariadb_conn(conn, userid, pwd);
+   mariadb_conn(conn, SERVER, userid, pwd);
    getch();                         // Wait for user before ending.
    clear();                         // Clear the screen
    refresh();                       // Redraw the cleared screen
