@@ -19,6 +19,91 @@ int prompt_credentials(char *userid, size_t userid_size,
 // TODO: move this into a file with mariadb utility functions
 int mariadb_conn(MYSQL *conn, char *server, char *database, char *userid, char *password);
 
+// Struct to hold submenu definitions
+typedef struct {
+    const char *title;
+    char **choices;
+    int n_choices;
+} SubMenu;
+
+// Example submenu definitions
+char *file_choices[] = {"New", "Open", "Save", "Back"};
+char *tools_choices[] = {"Options", "Preferences", "Back"};
+
+SubMenu submenus[] = {
+    {"File", file_choices, sizeof(file_choices)/sizeof(file_choices[0])},
+    {"Tools", tools_choices, sizeof(tools_choices)/sizeof(tools_choices[0])}
+};
+int n_submenus = sizeof(submenus)/sizeof(submenus[0]);
+
+// Function to run a vertical submenu
+void run_submenu(const char *title, char **choices, int n_choices) {
+   ITEM **items;
+   MENU *submenu;
+   WINDOW *submenu_win;
+   int c;
+
+   items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
+   for (int i = 0; i < n_choices; i++)
+   {
+      items[i] = new_item(choices[i], "");
+   };
+   items[n_choices] = (ITEM *)NULL;
+
+   submenu = new_menu((ITEM **)items);
+   submenu_win = newwin(n_choices + 4, 20, 2, 2); // height, width, y, x
+   keypad(submenu_win, TRUE);
+
+   set_menu_win(submenu, submenu_win);
+   set_menu_sub(submenu, derwin(submenu_win, n_choices, 18, 2, 1));
+   set_menu_mark(submenu, " > ");
+
+   box(submenu_win, 0, 0);
+   mvwprintw(submenu_win, 0, 2, "%s", title);
+
+   post_menu(submenu);
+   wrefresh(submenu_win);
+
+   while ((c = wgetch(submenu_win))) 
+   {
+      switch (c) 
+      {
+         case KEY_DOWN:
+            menu_driver(submenu, REQ_DOWN_ITEM);
+            break;
+         case KEY_UP:
+            menu_driver(submenu, REQ_UP_ITEM);
+            break;
+         case 10: 
+         {
+            ITEM *cur = current_item(submenu);
+            const char *name = item_name(cur);
+            if (strcmp(name, "Back") == 0) 
+            {
+               goto exit_submenu; // TODO: Eliminate goto
+            } 
+            else 
+            {
+               mvprintw(LINES - 3, 0, "You chose %s -> %s", title, name);
+               refresh();
+            }
+            break;
+         }
+      }
+      wrefresh(submenu_win);
+   }
+
+exit_submenu:
+   unpost_menu(submenu);
+   free_menu(submenu);
+   for (int i = 0; i < n_choices; i++) 
+   {
+      free_item(items[i]);
+   }
+   free(items);
+   delwin(submenu_win);
+}
+
 /**
  * Prompt the user for userid and password using ncurses.
  * 
@@ -150,7 +235,6 @@ int main()
       "Help",
       "Exit",
    };
-   // End ncurses specific menu variables and defines *************************
 
    // Start ncurses specific window variables
    WINDOW *winQuery, *winResults;   // Pointers to the top and bottom windows
@@ -159,28 +243,8 @@ int main()
    PANEL *top = panQuery;           // Key track of panel with the focus
    // End ncurses specific window variables
 
-   MYSQL *conn;                     // Database connection variable
 
-   conn = mysql_init(NULL);         // Initialize the MariaDB connection
-
-   initscr();                       // Start ncurses
-   cbreak();                        // Disable line buffering
-   noecho();                        // TODO: ????
-   keypad(stdscr, TRUE);            // TODO: ????
-
-   // Prompt for login and connect to the database
-   prompt_credentials(userid, sizeof(userid), pwd, sizeof(pwd));
-   mariadb_conn(conn, SERVER, DATABASE, userid, pwd);
-   getch();                         // Wait for user before ending.
-   clear();                         // Clear the screen
-   refresh();                       // Redraw the cleared screen
-   
-   // Create the two sub-windows
-   getmaxyx(stdscr, rows, cols);    // Get the terminal size
-
-   // Create the two windows stacked vertically (half screen each)
-   // allowing room for the menu at the top.
-   winQuery = newwin(rows / 2 + 1, cols, 1, 0);
+printf("A\n");
    winResults = newwin((rows / 2) - 1, cols, (rows / 2) + 1, 0);
 
    // Create the panels to manage window stacking
@@ -190,14 +254,15 @@ int main()
    // Draw borders and labels
    box(winQuery, 0, 0);
    mvwprintw(winQuery, 0, 2, "Query");
+printf("b\n");
 
    box(winResults, 0, 0);
    mvwprintw(winResults, 0, 2, "Results");
-
+printf("c\n");
    // Show the panels
    update_panels();
    doupdate();
-
+printf("d\n");
    // Create new menu items
    n_choices = ARRAY_SIZE(choices);
    items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
@@ -206,19 +271,21 @@ int main()
       items[i] = new_item(choices[i], ""); // label + description
    };
    items[n_choices] = (ITEM *)NULL;
-
+printf("e\n");
    // Create menu
-   menu = new_menu((ITEM **)items);
-
+   // ---------------------------------------------------------------------
+   menu = new_menu((ITEM **)items); // TODO - START HERE - Seg faults here!
+   // ---------------------------------------------------------------------
+printf("f\n");
    // Display menu horizontally with 1 row and n_choices columns
    set_menu_format(menu, 1, n_choices);
-
+printf("g\n");
    // Post the menu at row 0
    // mvprintw(2, 0, "Use LEFT/RIGHT arrow keys, Enter to select");
    set_menu_mark(menu, "");  // no marker (default is "->")
    post_menu(menu);
    refresh();
-
+printf("h\n");
    while ((c = getch()) != KEY_F(1)) 
    {
       switch (c) // TODO: Improve key handling for new complexity
@@ -245,14 +312,24 @@ int main()
             {
                ITEM *cur = current_item(menu);
                const char *name = item_name(cur);
+               
+               mvprintw(LINES - 4, 0, "You selected: %s   ", name);                      refresh();
 
-               mvprintw(LINES - 4, 0, "You selected: %s   ", name);
-               refresh();
+               // Check if this menu item has a submenu
+               for (int s = 0; s < n_submenus; s++) 
+               {
+                  if (strcmp(name, submenus[s].title) == 0) 
+                  {
+                     run_submenu(submenus[s].title, 
+                                 submenus[s].choices, 
+                                 submenus[s].n_choices);
+                  }
+               }
 
                if (strcmp(name, "Exit") == 0) 
                {
                   goto cleanup; // TODO: remove the goto
-               };
+               }
                break;
             }
       }
@@ -266,8 +343,9 @@ cleanup:
    unpost_menu(menu);
    free_menu(menu);
    for (i = 0; i < n_choices; ++i)
-   
-   free_item(items[i]);
+   { 
+      free_item(items[i]);
+   }
    free(items);
 
    // Cleanup the panels
