@@ -72,11 +72,12 @@ int prompt_credentials(char *userid, size_t userid_size,
 /* Connect to a MariaDB server with the provided credentials.
  *
  * Assumes the database connection has been initialized with mysql_init().
- * TODO: Add database as a parameter
- *       Handle sockets (low priority)
+ * TODO: Handle sockets (low priority)
  * 
  * Paramters:
  *    conn is a pointer to the database connection created by mysql_init().
+ *    server is a string pointer to the mariadb server.
+ *    database is a string pointer to the database.
  *    userid is a string pointer to the user's login name.
  *    password is a string pointer to the user's password.
  *
