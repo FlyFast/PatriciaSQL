@@ -1,4 +1,4 @@
-Information on how to participate in the project and expectations will go here.
+Not accepting new contributors at this time.
 
 C/C++ Coding Standards:
 1. Set all tabs to 3 spaces and replace tabs with spaces
