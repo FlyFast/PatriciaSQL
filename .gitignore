@@ -1,2 +1,30 @@
-*.o
-patriciasql
+src/patriciasql
+
+# Lazarus project files to ignore
+*.lps      # Lazarus Project Session file
+*.lpi      # Lazarus Project Information file
+*.bak      # Backup files
+*.ppu      # Free Pascal Unit compiled files
+*.o        # Object files
+*.res      # Resource files (compiled)
+*.compiled # Compiled files marker
+*.exe      # Executable files (Windows)
+*.app      # macOS application bundles
+*.so       # Shared object libraries (Linux)
+*.dylib    # Dynamic libraries (macOS)
+*.dll      # Dynamic link libraries (Windows)
+*.stat     # Compiler statistics file
+*.mc       # Message catalog files
+*.po       # GetText Portable Object files (if not managing translations in Git)
+*.mo       # GetText Machine Object files (compiled translations)
+*.log      # Log files
+*.txt      # Text files (if temporary/debug output)
+
+# IDE-specific directories to ignore
+/lib/      # Directory for compiled units
+/backup/   # Backup directory
+/obj/      # Object file directory
+
+# OS-specific files
+.DS_Store  # macOS specific file
+Thumbs.db  # Windows specific file
