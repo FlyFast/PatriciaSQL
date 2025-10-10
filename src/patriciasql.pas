@@ -1,4 +1,4 @@
-program patricialsql;
+program patriciasql;
 
 {$mode objfpc}{$H+}
 

@@ -7,9 +7,10 @@
         <MainUnitHasCreateFormStatements Value="False"/>
         <MainUnitHasTitleStatement Value="False"/>
         <MainUnitHasScaledStatement Value="False"/>
+        <UseDefaultCompilerOptions Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <Title Value="patricialsql"/>
+      <Title Value="patriciasql"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
@@ -25,7 +26,7 @@
     </RunParams>
     <Units>
       <Unit>
-        <Filename Value="patricialsql.pas"/>
+        <Filename Value="patriciasql.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
     </Units>
@@ -33,17 +34,11 @@
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="patricialsql"/>
+      <Filename Value="patriciasql"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir)"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
-    <Linking>
-      <Debugging>
-        <DebugInfoType Value="dsDwarf3"/>
-      </Debugging>
-    </Linking>
   </CompilerOptions>
   <Debugging>
     <Exceptions>
